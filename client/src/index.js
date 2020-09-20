@@ -51,10 +51,95 @@ class App extends React.Component {
 }
 
 class Game extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            height: 19,
+            width: 19
+        }
+    }
+
     render() {
         return (
-            <div className="body">
-                Not implemented
+            <div className="game">
+                <Board height={this.state.height} width={this.state.width}/>
+            </div>
+        )
+    }
+}
+
+class Board extends React.Component {
+    constructor(props) {
+        super(props);
+
+        const cellStates = {
+            NULL: null,
+            BLACK: "⚫",
+            WHITE: "⚪"
+        }
+
+        this.state = {
+            boardData: this.initializeBoardData(props.height, props.width, cellStates),
+            cellStates: cellStates,
+            blackTurn: true
+        }
+    }
+
+    initializeBoardData = (height, width, cellStates) => {
+        let data = [];
+        for (let i = 0; i < height; i++) {
+            data.push([]);
+            for (let j = 0; j < width; j++) {
+                data[i][j] = {
+                    x: i,
+                    y: j,
+                    cellState: cellStates.NULL
+                };
+            }
+        }
+        return data;
+    }
+
+    handleCellClick = (x, y) => {
+        if (this.state.boardData[x][y].cellState === this.state.cellStates.NULL) {
+            const val = this.state.blackTurn ? this.state.cellStates.BLACK : this.state.cellStates.WHITE;
+            const newBoardData = this.state.boardData;
+            newBoardData[x][y].cellState = val;
+            this.setState({boardData: newBoardData, blackTurn: !this.state.blackTurn});
+        }
+    }
+
+    renderBoard = (data) => {
+        return data.map((row) => {
+            return row.map((item) => {
+                return (
+                    <div
+                        key={item.x * row.length + item.y}>
+                        <Cell
+                            onClick={() => this.handleCellClick(item.x, item.y)}
+                            value={item}
+                        />
+                        {(row[row.length - 1] === item) ?
+                            <div className="clear"/> : ""}
+                    </div>
+                );
+            })
+        });
+    }
+
+    render() {
+        return (
+            this.renderBoard(this.state.boardData)
+        );
+    }
+}
+
+class Cell extends React.Component {
+    render() {
+        return (
+            <div className={"cell" + (this.props.value.cellState === null ? " active" : "")} onClick={this.props.onClick}>
+                {this.props.value.cellState}
             </div>
         )
     }

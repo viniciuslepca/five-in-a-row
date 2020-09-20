@@ -3,8 +3,13 @@
 
 import os
 
-from flask import Flask, send_from_directory, jsonify
+from flask import Flask, send_from_directory, jsonify, request, abort
 
+from game import Game
+
+HEIGHT = 19
+WIDTH = 19
+g = Game(HEIGHT, WIDTH)
 app = Flask(__name__, static_folder='client/build')
 
 
@@ -18,11 +23,19 @@ def serve(path):
         return send_from_directory(app.static_folder, 'index.html')
 
 
-@app.route('/test')
-def test():
+@app.route('/stones', methods=['POST'])
+def make_play():
+    body = request.get_json()
+    if body is None:
+        abort(400)
+    x = body.get('x')
+    y = body.get('y')
+    val = body.get('val')
+    success = g.make_play(x, y, val)
+
     return jsonify({
-        'success': True,
-        'value': 'test'
+        'success': success,
+        'board_data': g.board_data
     })
 
 
