@@ -4,6 +4,7 @@
 import os
 
 from flask import Flask, send_from_directory, jsonify, request, abort
+from flask_cors import CORS
 
 from game import Game
 
@@ -11,6 +12,7 @@ HEIGHT = 19
 WIDTH = 19
 g = Game(HEIGHT, WIDTH)
 app = Flask(__name__, static_folder='client/build')
+cors = CORS(app)
 
 
 # Serve React App
@@ -23,7 +25,15 @@ def serve(path):
         return send_from_directory(app.static_folder, 'index.html')
 
 
-@app.route('/stones', methods=['POST'])
+@app.route('/game')
+def get_game():
+    return jsonify({
+        'success': True,
+        'board_data': g.board_data
+    })
+
+
+@app.route('/game', methods=['POST'])
 def make_play():
     body = request.get_json()
     if body is None:

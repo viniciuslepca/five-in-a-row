@@ -2,7 +2,7 @@ def initialize_board_data(height, width):
     return [[{
         'x': i,
         'y': j,
-        'value': None
+        'cellState': None
     } for j in range(width)] for i in range(height)]
 
 
@@ -19,11 +19,11 @@ class Game:
         if x > len(self.board_data) or y > len(self.board_data[0]):
             return False
 
-        if val != 'b' and val != 'w':
+        if val != '⚫' and val != '⚪':
             return False
 
-        if self.board_data[x][y] is None:
-            self.board_data[x][y] = val
+        if self.board_data[x][y]['cellState'] is None:
+            self.board_data[x][y]['cellState'] = val
             return True
 
         return False

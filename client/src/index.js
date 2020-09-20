@@ -56,14 +56,16 @@ class Game extends React.Component {
 
         this.state = {
             height: 19,
-            width: 19
+            width: 19,
+            baseUrl: "http://localhost:5000"
         }
     }
 
     render() {
         return (
             <div className="game">
-                <Board height={this.state.height} width={this.state.width}/>
+                <Board height={this.state.height} width={this.state.width}
+                       baseUrl={this.state.baseUrl}/>
             </div>
         )
     }
@@ -80,37 +82,43 @@ class Board extends React.Component {
         }
 
         this.state = {
-            boardData: this.initializeBoardData(props.height, props.width, cellStates),
+            boardData: null,
             cellStates: cellStates,
             blackTurn: true
         }
     }
 
-    initializeBoardData = (height, width, cellStates) => {
-        let data = [];
-        for (let i = 0; i < height; i++) {
-            data.push([]);
-            for (let j = 0; j < width; j++) {
-                data[i][j] = {
-                    x: i,
-                    y: j,
-                    cellState: cellStates.NULL
-                };
-            }
-        }
-        return data;
+    getBoardFromServer = async () => {
+        const response = await fetch(this.props.baseUrl + '/game').then(response => response.json())
+        this.setState({boardData: response['board_data']})
     }
 
-    handleCellClick = (x, y) => {
+    componentDidMount() {
+        this.getBoardFromServer();
+    }
+
+    handleCellClick = async (x, y) => {
         if (this.state.boardData[x][y].cellState === this.state.cellStates.NULL) {
             const val = this.state.blackTurn ? this.state.cellStates.BLACK : this.state.cellStates.WHITE;
-            const newBoardData = this.state.boardData;
-            newBoardData[x][y].cellState = val;
-            this.setState({boardData: newBoardData, blackTurn: !this.state.blackTurn});
+            const response = await fetch(this.props.baseUrl + "/game", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    x: x,
+                    y: y,
+                    val: val
+                })
+            }).then(response => response.json())
+            this.setState({
+                boardData: response['board_data'],
+                blackTurn: !this.state.blackTurn
+            });
         }
     }
 
     renderBoard = (data) => {
+        if (this.state.boardData === null) return null;
+
         return data.map((row) => {
             return row.map((item) => {
                 return (
@@ -138,7 +146,9 @@ class Board extends React.Component {
 class Cell extends React.Component {
     render() {
         return (
-            <div className={"cell" + (this.props.value.cellState === null ? " active" : "")} onClick={this.props.onClick}>
+            <div
+                className={"cell" + (this.props.value.cellState === null ? " active" : "")}
+                onClick={this.props.onClick}>
                 {this.props.value.cellState}
             </div>
         )
