@@ -45,7 +45,8 @@ def make_play():
 
     return jsonify({
         'success': success,
-        'board_data': g.board_data
+        'board_data': g.board_data,
+        'winner': g.winner
     })
 
 

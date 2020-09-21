@@ -84,7 +84,8 @@ class Board extends React.Component {
         this.state = {
             boardData: null,
             cellStates: cellStates,
-            blackTurn: true
+            blackTurn: true,
+            winner: null
         }
     }
 
@@ -111,7 +112,10 @@ class Board extends React.Component {
             }).then(response => response.json())
             this.setState({
                 boardData: response['board_data'],
-                blackTurn: !this.state.blackTurn
+                blackTurn: !this.state.blackTurn,
+                winner: response['winner']
+            }, () => {
+                if (this.state.winner !== null) alert("Winner: " + this.state.winner)
             });
         }
     }
