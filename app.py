@@ -49,6 +49,15 @@ def make_play():
         'winner': g.winner
     })
 
+@app.route('/new_game')
+def reset_game():
+    g.reset_game()
+
+    return jsonify({
+        'success': True,
+        'board_data': g.board_data
+    })
+
 
 if __name__ == '__main__':
     app.run(debug=True)

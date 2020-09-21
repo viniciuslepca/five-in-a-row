@@ -2,7 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
-import Image from "react-bootstrap/Image";
+import Image from 'react-bootstrap/Image';
+import Button from 'react-bootstrap/Button'
 
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -94,6 +95,11 @@ class Board extends React.Component {
         this.setState({boardData: response['board_data']})
     }
 
+    resetGame = async () => {
+        const response = await fetch(this.props.baseUrl + '/new_game').then(response => response.json())
+        this.setState({boardData: response['board_data']})
+    }
+
     componentDidMount() {
         this.getBoardFromServer();
     }
@@ -142,7 +148,10 @@ class Board extends React.Component {
 
     render() {
         return (
-            this.renderBoard(this.state.boardData)
+            <div>
+                <Button onClick={this.resetGame} variant="primary">Reset Game</Button>
+                {this.renderBoard(this.state.boardData)}
+            </div>
         );
     }
 }

@@ -19,6 +19,10 @@ class Game:
     def __repr__(self):
         return f'<Game: height {self.height}, width {self.width}>'
 
+    def reset_game(self):
+        self.board_data = initialize_board_data(self.height, self.width)
+        self.winner = None
+
     # Adds a stone of value "val" to position (x, y),
     # assuming it is empty and valid
     def make_play(self, x, y, val):
@@ -68,13 +72,9 @@ class Game:
         for outer_offset in range(win_length):
             i = x - outer_offset
             num_hits = 0
-            print('i', i)
             for inner_offset in range(win_length):
                 i_off = i + inner_offset
-                print('i off', i_off)
-                print('data', data[i_off][y])
                 if i_off < len(data) and data[i_off][y]['cellState'] == val:
-                    print(i_off, y, data[i_off][y])
                     num_hits += 1
             if num_hits == win_length:
                 return True
