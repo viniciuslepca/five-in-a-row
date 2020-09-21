@@ -5,6 +5,7 @@ import os
 
 from flask import Flask, send_from_directory, jsonify, request, abort
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 
 from game import Game
 
@@ -12,7 +13,9 @@ HEIGHT = 19
 WIDTH = 19
 g = Game(HEIGHT, WIDTH)
 app = Flask(__name__, static_folder='client/build')
+app.config['SECRET_KEY'] = os.urandom(16)
 cors = CORS(app)
+socket = SocketIO(app, cors_allowed_origins='*')
 
 
 # Serve React App
@@ -40,14 +43,14 @@ def make_play():
         abort(400)
     x = body.get('x')
     y = body.get('y')
-    val = body.get('val')
-    success = g.make_play(x, y, val)
+    success = g.make_play(x, y)
 
     return jsonify({
         'success': success,
         'board_data': g.board_data,
         'winner': g.winner
     })
+
 
 @app.route('/new_game')
 def reset_game():
@@ -58,6 +61,17 @@ def reset_game():
         'board_data': g.board_data
     })
 
+@socket.on('connect')
+def on_connect():
+    print(request.sid, 'connected')
+
+@socket.on('disconnect')
+def on_disconnect():
+    print(request.sid, 'disconnected')
+
+@socket.on('my event')
+def get_my_event(json, arg2):
+    print('my event:', json, arg2)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socket.run(app, debug=True)

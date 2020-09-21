@@ -5,16 +5,19 @@ def initialize_board_data(height, width):
         'cellState': None
     } for j in range(width)] for i in range(height)]
 
+# Define constants for types of stones
+BLACK = '⚫'
+WHITE = '⚪'
 
 class Game:
     def __init__(self, height, width):
         self.height = height
         self.width = width
         self.board_data = initialize_board_data(height, width)
-        self.BLACK = '⚫'
-        self.WHITE = '⚪'
         self.winner = None
         self.win_length = 5
+        self.players = []
+        self.first_player_turn = True
 
     def __repr__(self):
         return f'<Game: height {self.height}, width {self.width}>'
@@ -22,10 +25,17 @@ class Game:
     def reset_game(self):
         self.board_data = initialize_board_data(self.height, self.width)
         self.winner = None
+        self.first_player_turn = True
+
+    def add_player(self, player_id):
+        if len(self.players) < 2:
+            self.players.append(player_id)
+            return True
+        return False
 
     # Adds a stone of value "val" to position (x, y),
     # assuming it is empty and valid
-    def make_play(self, x, y, val):
+    def make_play(self, x, y):
         # Only allow play if game isn't over
         if self.winner is not None:
             return False
@@ -34,13 +44,12 @@ class Game:
         if x >= len(self.board_data) or y >= len(self.board_data[0]):
             return False
 
-        # Only allow black or white values to be played
-        if val != self.BLACK and val != self.WHITE:
-            return False
+        val = BLACK if self.first_player_turn else WHITE
 
         if self.board_data[x][y]['cellState'] is None:
             self.board_data[x][y]['cellState'] = val
             self.check_game_over(x, y, val)
+            self.first_player_turn = not self.first_player_turn
             return True
 
         # Don't do anything if the desired position already has a played value

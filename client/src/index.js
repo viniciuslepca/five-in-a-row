@@ -3,12 +3,19 @@ import ReactDOM from 'react-dom';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Image from 'react-bootstrap/Image';
-import Button from 'react-bootstrap/Button'
+import Button from 'react-bootstrap/Button';
+import io from 'socket.io-client';
 
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const gameImage = require('./images/game.jpg');
+const baseUrl = "http://localhost:5000";
+// Set up socket.io
+const socket = io(baseUrl);
+socket.on('connect', () => {
+    console.log(socket)
+})
 
 class App extends React.Component {
     constructor(props) {
@@ -57,16 +64,14 @@ class Game extends React.Component {
 
         this.state = {
             height: 19,
-            width: 19,
-            baseUrl: "http://localhost:5000"
+            width: 19
         }
     }
 
     render() {
         return (
             <div className="game">
-                <Board height={this.state.height} width={this.state.width}
-                       baseUrl={this.state.baseUrl}/>
+                <Board height={this.state.height} width={this.state.width}/>
             </div>
         )
     }
@@ -76,27 +81,19 @@ class Board extends React.Component {
     constructor(props) {
         super(props);
 
-        const cellStates = {
-            NULL: null,
-            BLACK: "⚫",
-            WHITE: "⚪"
-        }
-
         this.state = {
             boardData: null,
-            cellStates: cellStates,
-            blackTurn: true,
             winner: null
         }
     }
 
     getBoardFromServer = async () => {
-        const response = await fetch(this.props.baseUrl + '/game').then(response => response.json())
+        const response = await fetch(baseUrl + '/game').then(response => response.json())
         this.setState({boardData: response['board_data']})
     }
 
     resetGame = async () => {
-        const response = await fetch(this.props.baseUrl + '/new_game').then(response => response.json())
+        const response = await fetch(baseUrl + '/new_game').then(response => response.json())
         this.setState({boardData: response['board_data']})
     }
 
@@ -105,15 +102,13 @@ class Board extends React.Component {
     }
 
     handleCellClick = async (x, y) => {
-        if (this.state.boardData[x][y].cellState === this.state.cellStates.NULL) {
-            const val = this.state.blackTurn ? this.state.cellStates.BLACK : this.state.cellStates.WHITE;
-            const response = await fetch(this.props.baseUrl + "/game", {
+        if (this.state.boardData[x][y].cellState === null) {
+            const response = await fetch(baseUrl + "/game", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
                     x: x,
-                    y: y,
-                    val: val
+                    y: y
                 })
             }).then(response => response.json())
             this.setState({
@@ -149,7 +144,8 @@ class Board extends React.Component {
     render() {
         return (
             <div>
-                <Button onClick={this.resetGame} variant="primary">Reset Game</Button>
+                <Button onClick={this.resetGame} variant="primary">Reset
+                    Game</Button>
                 {this.renderBoard(this.state.boardData)}
             </div>
         );
