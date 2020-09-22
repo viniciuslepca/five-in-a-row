@@ -28,34 +28,46 @@ def serve(path):
     else:
         return send_from_directory(app.static_folder, 'index.html')
 
+
 @socket.on('connect')
 def on_connect():
     return g.add_player(request.sid)
+
 
 @socket.on('disconnect')
 def on_disconnect():
     g.remove_player(request.sid)
 
+
 @socket.on('get_board')
 def get_board():
+    user_turn = g.players[0] if g.first_player_turn else g.players[1]
+
     return json.dumps({
         'success': True,
-        'board_data': g.board_data
+        'board_data': g.board_data,
+        'user_turn': user_turn
     })
 
+
 def emit_update_board(success):
+    user_turn = g.players[0] if g.first_player_turn else g.players[1]
+
     response_object = json.dumps({
         'success': success,
         'board_data': g.board_data,
-        'winner': g.winner
+        'winner': g.winner,
+        'user_turn': user_turn
     })
 
     emit('update_board', response_object, broadcast=True)
 
+
 @socket.on('make_play')
 def make_play(x, y):
-    success = g.make_play(x, y)
+    success = g.make_play(x, y, request.sid)
     emit_update_board(success)
+
 
 @socket.on('reset_game')
 def reset_game():

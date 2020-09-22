@@ -69,7 +69,8 @@ class Board extends React.Component {
 
         this.state = {
             boardData: null,
-            winner: null
+            winner: null,
+            userTurn: null
         }
     }
 
@@ -82,8 +83,9 @@ class Board extends React.Component {
         socket.on('connect', () => {
             socket.emit('get_board', (data) => {
                 const parsedData = JSON.parse(data);
-                const boardData = parsedData['board_data']
-                this.setState({boardData: boardData})
+                const boardData = parsedData['board_data'];
+                const userTurn = parsedData['user_turn'];
+                this.setState({boardData: boardData, userTurn: userTurn});
             })
         })
 
@@ -97,8 +99,8 @@ class Board extends React.Component {
             const response = JSON.parse(data);
             this.setState({
                 boardData: response['board_data'],
-                blackTurn: !this.state.blackTurn,
-                winner: response['winner']
+                winner: response['winner'],
+                userTurn: response['user_turn']
             }, () => {
                 if (this.state.winner !== null) {
                     alert("Winner: " + this.state.winner)
