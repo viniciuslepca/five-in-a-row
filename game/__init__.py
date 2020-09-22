@@ -6,11 +6,6 @@ def initialize_board_data(height, width):
     } for j in range(width)] for i in range(height)]
 
 
-# Define constants for types of stones
-BLACK = '⚫'
-WHITE = '⚪'
-
-
 class Game:
     def __init__(self, height, width):
         self.height = height
@@ -18,6 +13,8 @@ class Game:
         self.board_data = initialize_board_data(height, width)
         self.winner = None
         self.win_length = 5
+        self.BLACK = '⚫'
+        self.WHITE = '⚪'
         self.players = []
         self.first_player_turn = True
 
@@ -58,11 +55,11 @@ class Game:
                 not self.first_player_turn and player_index == 0):
             return False
 
-        val = BLACK if self.first_player_turn else WHITE
+        val = self.BLACK if self.first_player_turn else self.WHITE
 
         if self.board_data[x][y]['cellState'] is None:
             self.board_data[x][y]['cellState'] = val
-            self.check_game_over(x, y, val)
+            self.check_game_over(x, y, val, player_id)
             self.first_player_turn = not self.first_player_turn
             return True
 
@@ -70,21 +67,21 @@ class Game:
         return False
 
     # Checks if the game is over after a stone is played at position (x, y)
-    def check_game_over(self, x, y, val):
+    def check_game_over(self, x, y, val, player_id):
         # Check for bounds
-        if x > len(self.board_data) or y > len(self.board_data[0]):
+        if x > len(self.board_data) or y > len(self.board_data[x]):
             return
 
         if self.check_vertical(x, y, val):
-            self.winner = val
+            self.winner = player_id
             return
 
         if self.check_horizontal(x, y, val):
-            self.winner = val
+            self.winner = player_id
             return
 
         if self.check_diagonal(x, y, val):
-            self.winner = val
+            self.winner = player_id
             return
 
     # Checks for a vertical line of 5 stones

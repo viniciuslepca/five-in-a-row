@@ -73,6 +73,7 @@ class Board extends React.Component {
             boardData: null,
             winner: null,
             userTurn: null,
+            userStone: null,
             numPlayers: null
         }
     }
@@ -88,6 +89,7 @@ class Board extends React.Component {
                 boardData: response['board_data'],
                 winner: response['winner'],
                 userTurn: response['user_turn'],
+                userStone: response['user_stone'],
                 numPlayers: response['num_players']
             });
         }
@@ -143,6 +145,38 @@ class Board extends React.Component {
         )
     }
 
+    renderMessage = (isGameOver, isPlayerTurn) => {
+        let message = "";
+        if (isGameOver) {
+            if (this.state.winner === socket.id) {
+                message = "Congratulations, you won the game!";
+            } else {
+                message = "You lost the game :(";
+            }
+        } else if (isPlayerTurn) {
+            message = "It's your turn! Playing " + this.state.userStone;
+        } else {
+            message = "Waiting for the other player...";
+        }
+
+        return (
+            <div className="center-content">
+                <p>{message}</p>
+            </div>
+        );
+    }
+
+    renderRestartButton = (isGameOver) => {
+        if (isGameOver) {
+            return (
+                <div className="center-content">
+                    <Button onClick={this.restartGame}>Restart Game</Button>
+                </div>
+            )
+        }
+        return null;
+    }
+
     render() {
         if (this.state.boardData === null) return null;
 
@@ -167,25 +201,8 @@ class Board extends React.Component {
         const isPlayerTurn = (socket.id === this.state.userTurn);
         return (
             <div>
-                <div className="center-content">
-                    <p>
-                        {
-                            isGameOver ?
-                                "Game over! The winner is " + this.state.winner + "." :
-                                isPlayerTurn ?
-                                    "It's your turn!" :
-                                    "Waiting for the other player..."
-                        }
-                    </p>
-                </div>
-                {
-                    isGameOver ?
-                        <div className="center-content">
-                            <Button onClick={this.restartGame}>Restart
-                                Game</Button>
-                        </div> :
-                        null
-                }
+                {this.renderMessage(isGameOver, isPlayerTurn)}
+                {this.renderRestartButton(isGameOver)}
                 {this.renderBoard(this.state.boardData, isPlayerTurn, isGameOver)}
             </div>
         );

@@ -37,14 +37,23 @@ def get_user_turn():
     return user_turn
 
 
+def get_user_stone(user_turn):
+    if user_turn is None:
+        return None
+
+    return g.BLACK if g.players.index(user_turn) == 0 else g.WHITE
+
+
 def generate_board_object(success):
     user_turn = get_user_turn()
+    user_stone = get_user_stone(user_turn)
 
     return json.dumps({
         'success': success,
         'board_data': g.board_data,
         'winner': g.winner,
         'user_turn': user_turn,
+        'user_stone': user_stone,
         'num_players': len(g.players)
     })
 
