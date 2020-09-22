@@ -14,7 +14,7 @@ HEIGHT = 19
 WIDTH = 19
 g = Game(HEIGHT, WIDTH)
 app = Flask(__name__, static_folder='client/build')
-app.config['SECRET_KEY'] = os.urandom(16)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(16))
 cors = CORS(app)
 socket = SocketIO(app, cors_allowed_origins='*')
 
@@ -95,4 +95,5 @@ def reset_game():
 
 
 if __name__ == '__main__':
-    socket.run(app, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    socket.run(app, host='0.0.0.0', port=port, debug=True)
