@@ -1,0 +1,2 @@
+#rules-body{max-width:800px;margin:20px auto;text-align:center}.game{max-width:1000px;margin:20px auto}.clear{clear:both;content:""}.cell{background:#979797;border:1px solid #fff;float:left;line-height:45px;height:45px;text-align:center;width:45px;border-radius:5px;color:#fff;font-weight:600;-webkit-user-select:none;-ms-user-select:none;user-select:none}.cell.active{background:#7b7b7b}.cell.active:hover{cursor:pointer;background:#616161}.cell:focus{outline:none}.center-content{text-align:center}#board{margin:0 72px}
+/*# sourceMappingURL=main.b82a210e.chunk.css.map */
