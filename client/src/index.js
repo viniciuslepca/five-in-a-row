@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Image from 'react-bootstrap/Image';
+import Button from 'react-bootstrap/Button';
 import io from 'socket.io-client';
 
 import './index.css';
@@ -63,6 +64,8 @@ function Game() {
 }
 
 class Board extends React.Component {
+    _isMounted = false;
+
     constructor(props) {
         super(props);
 
@@ -74,26 +77,39 @@ class Board extends React.Component {
         }
     }
 
-    resetGame = async () => {
+    restartGame = async () => {
         socket.emit('reset_game');
     }
 
-    componentDidMount() {
-        // If connection fails, set boardData to undefined and display error
-        socket.on('connect_error', () => {
-            this.setState({boardData: undefined})
-        })
-
-        // Receive board updates
-        socket.on('update_board', (data) => {
+    updateState = (data) => {
+        if (this._isMounted) {
             const response = JSON.parse(data);
             this.setState({
                 boardData: response['board_data'],
                 winner: response['winner'],
                 userTurn: response['user_turn'],
                 numPlayers: response['num_players']
-            })
+            });
+        }
+    }
+
+    componentDidMount() {
+        this._isMounted = true;
+
+        // If connection fails, set boardData to undefined and display error
+        socket.on('connect_error', () => {
+            if (this._isMounted) this.setState({boardData: undefined})
         })
+
+        // Receive board updates
+        socket.on('update_board', this.updateState)
+
+        // Request data
+        socket.emit('get_board', this.updateState)
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
     }
 
     handleCellClick = async (x, y) => {
@@ -103,23 +119,28 @@ class Board extends React.Component {
     }
 
     renderBoard = (data, isPlayerTurn, isGameOver) => {
-        return data.map((row) => {
-            return row.map((item) => {
-                return (
-                    <div
-                        key={item.x * row.length + item.y}>
-                        <Cell
-                            onClick={() => this.handleCellClick(item.x, item.y)}
-                            value={item}
-                            isPlayerTurn={isPlayerTurn}
-                            isGameOver={isGameOver}
-                        />
-                        {(row[row.length - 1] === item) ?
-                            <div className="clear"/> : ""}
-                    </div>
-                );
-            })
-        });
+        return (
+            <div id="board" className="center-content">
+                {
+                    data.map((row) => {
+                        return row.map((item) => {
+                            return (
+                                <div key={item.x * row.length + item.y}>
+                                    <Cell
+                                        onClick={() => this.handleCellClick(item.x, item.y)}
+                                        value={item}
+                                        isPlayerTurn={isPlayerTurn}
+                                        isGameOver={isGameOver}
+                                    />
+                                    {(row[row.length - 1] === item) ?
+                                        <div className="clear"/> : ""}
+                                </div>
+                            );
+                        })
+                    })
+                }
+            </div>
+        )
     }
 
     render() {
@@ -128,7 +149,7 @@ class Board extends React.Component {
         if (this.state.boardData === undefined) {
             // Case where connection failed
             return (
-                <div style={{textAlign: "center"}}>
+                <div className="center-content">
                     <p>It seems like there already are 2 players connected.</p>
                 </div>
             )
@@ -136,7 +157,7 @@ class Board extends React.Component {
 
         if (this.state.numPlayers === 1) {
             return (
-                <div style={{textAlign: "center"}}>
+                <div className="center-content">
                     <p>Waiting for a second player to connect.</p>
                 </div>
             )
@@ -146,7 +167,7 @@ class Board extends React.Component {
         const isPlayerTurn = (socket.id === this.state.userTurn);
         return (
             <div>
-                <div style={{textAlign: "center"}}>
+                <div className="center-content">
                     <p>
                         {
                             isGameOver ?
@@ -157,6 +178,14 @@ class Board extends React.Component {
                         }
                     </p>
                 </div>
+                {
+                    isGameOver ?
+                        <div className="center-content">
+                            <Button onClick={this.restartGame}>Restart
+                                Game</Button>
+                        </div> :
+                        null
+                }
                 {this.renderBoard(this.state.boardData, isPlayerTurn, isGameOver)}
             </div>
         );

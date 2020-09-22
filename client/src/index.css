@@ -10,8 +10,8 @@
 }
 
 .clear {
-  clear: both;
-  content: "";
+    clear: both;
+    content: "";
 }
 
 .cell {
@@ -39,4 +39,12 @@
 
 .cell:focus {
     outline: none;
+}
+
+.center-content {
+    text-align: center;
+}
+
+#board {
+    margin: 0 72px;
 }

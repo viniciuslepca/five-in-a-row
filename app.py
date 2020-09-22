@@ -29,10 +29,18 @@ def serve(path):
         return send_from_directory(app.static_folder, 'index.html')
 
 
-def emit_update_board(success):
+def get_user_turn():
+    if len(g.players) < 2:
+        user_turn = None
+    else:
+        user_turn = g.players[0] if g.first_player_turn else g.players[1]
+    return user_turn
+
+
+def generate_board_object(success):
     user_turn = get_user_turn()
 
-    response_object = json.dumps({
+    return json.dumps({
         'success': success,
         'board_data': g.board_data,
         'winner': g.winner,
@@ -40,7 +48,10 @@ def emit_update_board(success):
         'num_players': len(g.players)
     })
 
-    emit('update_board', response_object, broadcast=True)
+
+def emit_update_board(success):
+    board = generate_board_object(success)
+    emit('update_board', board, broadcast=True)
 
 
 @socket.on('connect')
@@ -57,12 +68,9 @@ def on_disconnect():
     emit_update_board(True)
 
 
-def get_user_turn():
-    if len(g.players) < 2:
-        user_turn = None
-    else:
-        user_turn = g.players[0] if g.first_player_turn else g.players[1]
-    return user_turn
+@socket.on('get_board')
+def get_board():
+    return generate_board_object(True)
 
 
 @socket.on('make_play')
