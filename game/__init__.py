@@ -33,6 +33,9 @@ class Game:
             return True
         return False
 
+    def remove_player(self, player_id):
+        self.players.remove(player_id)
+
     # Adds a stone of value "val" to position (x, y),
     # assuming it is empty and valid
     def make_play(self, x, y):

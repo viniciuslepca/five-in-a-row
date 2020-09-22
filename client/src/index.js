@@ -13,9 +13,6 @@ const gameImage = require('./images/game.jpg');
 const baseUrl = "http://localhost:5000";
 // Set up socket.io
 const socket = io(baseUrl);
-socket.on('connect', () => {
-    console.log(socket)
-})
 
 class App extends React.Component {
     constructor(props) {
@@ -58,23 +55,12 @@ class App extends React.Component {
     }
 }
 
-class Game extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            height: 19,
-            width: 19
-        }
-    }
-
-    render() {
-        return (
-            <div className="game">
-                <Board height={this.state.height} width={this.state.width}/>
-            </div>
-        )
-    }
+function Game() {
+    return (
+        <div className="game">
+            <Board/>
+        </div>
+    )
 }
 
 class Board extends React.Component {
@@ -87,43 +73,47 @@ class Board extends React.Component {
         }
     }
 
-    getBoardFromServer = async () => {
-        const response = await fetch(baseUrl + '/game').then(response => response.json())
-        this.setState({boardData: response['board_data']})
-    }
-
     resetGame = async () => {
-        const response = await fetch(baseUrl + '/new_game').then(response => response.json())
-        this.setState({boardData: response['board_data']})
+        socket.emit('reset_game');
     }
 
     componentDidMount() {
-        this.getBoardFromServer();
-    }
+        // Get board upon connection
+        socket.on('connect', () => {
+            socket.emit('get_board', (data) => {
+                const parsedData = JSON.parse(data);
+                const boardData = parsedData['board_data']
+                this.setState({boardData: boardData})
+            })
+        })
 
-    handleCellClick = async (x, y) => {
-        if (this.state.boardData[x][y].cellState === null) {
-            const response = await fetch(baseUrl + "/game", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    x: x,
-                    y: y
-                })
-            }).then(response => response.json())
+        // If connection fails, set boardData to undefined and display error
+        socket.on('connect_error', () => {
+            this.setState({boardData: undefined})
+        })
+
+        // Receive board updates
+        socket.on('update_board', (data) => {
+            const response = JSON.parse(data);
             this.setState({
                 boardData: response['board_data'],
                 blackTurn: !this.state.blackTurn,
                 winner: response['winner']
             }, () => {
-                if (this.state.winner !== null) alert("Winner: " + this.state.winner)
-            });
+                if (this.state.winner !== null) {
+                    alert("Winner: " + this.state.winner)
+                }
+            })
+        })
+    }
+
+    handleCellClick = async (x, y) => {
+        if (this.state.boardData[x][y].cellState === null) {
+            socket.emit('make_play', x, y)
         }
     }
 
     renderBoard = (data) => {
-        if (this.state.boardData === null) return null;
-
         return data.map((row) => {
             return row.map((item) => {
                 return (
@@ -142,10 +132,21 @@ class Board extends React.Component {
     }
 
     render() {
+        if (this.state.boardData === null) return null;
+
+        if (this.state.boardData === undefined) {
+            // Case where connection failed
+            return (
+                <div style={{textAlign: "center"}}>
+                    <p>It seems like there already are 2 players connected.</p>
+                </div>
+            )
+        }
+
         return (
             <div>
-                <Button onClick={this.resetGame} variant="primary">Reset
-                    Game</Button>
+                <Button onClick={this.resetGame} variant="primary">Reset Game
+                </Button>
                 {this.renderBoard(this.state.boardData)}
             </div>
         );
