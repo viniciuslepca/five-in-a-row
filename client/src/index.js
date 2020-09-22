@@ -10,12 +10,12 @@ import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const gameImage = require('./images/game.jpg');
-const localUrl = "http://localhost:5000";
+// const localUrl = "http://localhost:5000";
 const deployedUrl = "https://five-in-a-row-game.herokuapp.com";
 // Set up socket.io, first try deployed url
 let socket = io(deployedUrl);
 // If deployed url doesn't work, try local url
-if (socket.disconnected) socket = io(localUrl);
+// if (socket.disconnected) socket = io(localUrl);
 
 class App extends React.Component {
     constructor(props) {
