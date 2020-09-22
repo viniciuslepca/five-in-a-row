@@ -29,38 +29,40 @@ def serve(path):
         return send_from_directory(app.static_folder, 'index.html')
 
 
-@socket.on('connect')
-def on_connect():
-    return g.add_player(request.sid)
-
-
-@socket.on('disconnect')
-def on_disconnect():
-    g.remove_player(request.sid)
-
-
-@socket.on('get_board')
-def get_board():
-    user_turn = g.players[0] if g.first_player_turn else g.players[1]
-
-    return json.dumps({
-        'success': True,
-        'board_data': g.board_data,
-        'user_turn': user_turn
-    })
-
-
 def emit_update_board(success):
-    user_turn = g.players[0] if g.first_player_turn else g.players[1]
+    user_turn = get_user_turn()
 
     response_object = json.dumps({
         'success': success,
         'board_data': g.board_data,
         'winner': g.winner,
-        'user_turn': user_turn
+        'user_turn': user_turn,
+        'num_players': len(g.players)
     })
 
     emit('update_board', response_object, broadcast=True)
+
+
+@socket.on('connect')
+def on_connect():
+    success = g.add_player(request.sid)
+    emit_update_board(True)
+    return success
+
+
+@socket.on('disconnect')
+def on_disconnect():
+    g.remove_player(request.sid)
+    g.reset_game()
+    emit_update_board(True)
+
+
+def get_user_turn():
+    if len(g.players) < 2:
+        user_turn = None
+    else:
+        user_turn = g.players[0] if g.first_player_turn else g.players[1]
+    return user_turn
 
 
 @socket.on('make_play')

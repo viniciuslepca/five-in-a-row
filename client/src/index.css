@@ -15,7 +15,7 @@
 }
 
 .cell {
-    background: #7b7b7b;
+    background: #979797;
     border: 1px solid #fff;
     float: left;
     line-height: 45px;
@@ -26,6 +26,10 @@
     color: #fff;
     font-weight: 600;
     user-select: none;
+}
+
+.cell.active {
+    background: #7b7b7b;
 }
 
 .cell.active:hover {

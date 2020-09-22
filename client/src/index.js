@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Image from 'react-bootstrap/Image';
-import Button from 'react-bootstrap/Button';
 import io from 'socket.io-client';
 
 import './index.css';
@@ -70,7 +69,8 @@ class Board extends React.Component {
         this.state = {
             boardData: null,
             winner: null,
-            userTurn: null
+            userTurn: null,
+            numPlayers: null
         }
     }
 
@@ -79,16 +79,6 @@ class Board extends React.Component {
     }
 
     componentDidMount() {
-        // Get board upon connection
-        socket.on('connect', () => {
-            socket.emit('get_board', (data) => {
-                const parsedData = JSON.parse(data);
-                const boardData = parsedData['board_data'];
-                const userTurn = parsedData['user_turn'];
-                this.setState({boardData: boardData, userTurn: userTurn});
-            })
-        })
-
         // If connection fails, set boardData to undefined and display error
         socket.on('connect_error', () => {
             this.setState({boardData: undefined})
@@ -100,22 +90,19 @@ class Board extends React.Component {
             this.setState({
                 boardData: response['board_data'],
                 winner: response['winner'],
-                userTurn: response['user_turn']
-            }, () => {
-                if (this.state.winner !== null) {
-                    alert("Winner: " + this.state.winner)
-                }
+                userTurn: response['user_turn'],
+                numPlayers: response['num_players']
             })
         })
     }
 
     handleCellClick = async (x, y) => {
-        if (this.state.boardData[x][y].cellState === null) {
+        if (this.state.winner === null && this.state.boardData[x][y].cellState === null) {
             socket.emit('make_play', x, y)
         }
     }
 
-    renderBoard = (data) => {
+    renderBoard = (data, isPlayerTurn, isGameOver) => {
         return data.map((row) => {
             return row.map((item) => {
                 return (
@@ -124,6 +111,8 @@ class Board extends React.Component {
                         <Cell
                             onClick={() => this.handleCellClick(item.x, item.y)}
                             value={item}
+                            isPlayerTurn={isPlayerTurn}
+                            isGameOver={isGameOver}
                         />
                         {(row[row.length - 1] === item) ?
                             <div className="clear"/> : ""}
@@ -145,11 +134,30 @@ class Board extends React.Component {
             )
         }
 
+        if (this.state.numPlayers === 1) {
+            return (
+                <div style={{textAlign: "center"}}>
+                    <p>Waiting for a second player to connect.</p>
+                </div>
+            )
+        }
+
+        const isGameOver = (this.state.winner !== null);
+        const isPlayerTurn = (socket.id === this.state.userTurn);
         return (
             <div>
-                <Button onClick={this.resetGame} variant="primary">Reset Game
-                </Button>
-                {this.renderBoard(this.state.boardData)}
+                <div style={{textAlign: "center"}}>
+                    <p>
+                        {
+                            isGameOver ?
+                                "Game over! The winner is " + this.state.winner + "." :
+                                isPlayerTurn ?
+                                    "It's your turn!" :
+                                    "Waiting for the other player..."
+                        }
+                    </p>
+                </div>
+                {this.renderBoard(this.state.boardData, isPlayerTurn, isGameOver)}
             </div>
         );
     }
@@ -157,9 +165,11 @@ class Board extends React.Component {
 
 class Cell extends React.Component {
     render() {
+        const isActive = (!this.props.isGameOver && this.props.isPlayerTurn
+            && this.props.value.cellState === null);
         return (
             <div
-                className={"cell" + (this.props.value.cellState === null ? " active" : "")}
+                className={"cell" + (isActive ? " active" : "")}
                 onClick={this.props.onClick}>
                 {this.props.value.cellState}
             </div>
@@ -167,7 +177,7 @@ class Cell extends React.Component {
     }
 }
 
-function Rules(props) {
+function Rules() {
     return (
         <div id="rules-body">
             <Image src={gameImage} style={{height: 400}}/>
