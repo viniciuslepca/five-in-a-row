@@ -6,8 +6,6 @@ happens through Socket.io to ensure real-time updates.
 The application can be accessed through
 [https://five-in-a-row-game.herokuapp.com/](https://five-in-a-row-game.herokuapp.com/)
 
-The app was developed for the Web Security class at JHU, Fall 2020.
-
 To play the game:
 1. Join the web page and wait for a second user to join.
 2. When the second user joins, the game will automatically start.
